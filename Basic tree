@@ -4,14 +4,14 @@ library(zoo)
 
 #split function
 split <- function(X, y){
-  
+  X <- data.frame(X)
   #dataframe for storing sse of splitting points for each variable
   sse_full <- data.frame(X)[1,]
   
   #loop
-  for (j in len(X)){
+  for (j in length(colnames(X))){
     X_split <- X[,j]
-    splits <- rollmean(sort(unique(X_split)))
+    splits <- sort(unique(X_split))
     sse <- c()
     for (i in seq_along(splits)){
       sp <- splits[i]
@@ -32,7 +32,7 @@ k <- 0
 maxdepth <- 3
 minobs <- 50
 
-tree_info <- data.frame(node = 1, nobs = nrow(data), status = "split", level = 0,  
+tree_info <- data.frame(node = 1, nobs = nrow(data), status = "split", level = 1,  
                       splitpoint = 1, splitvariable = "Variable")
 
 while (k <= maxdepth) {
@@ -54,21 +54,21 @@ while (k <= maxdepth) {
       new_branch <- c(node, nobs, status, level, splitpoint, splitvariable)
       
       #children branches
-      if (len(which(X$splitvariable < splitpoint)) > nobs){
+      if (length(which(X$splitvariable < splitpoint)) > nobs){
         c_status1 <- "split"
-        c_nobs1 <- len(which(X$splitvariable < splitpoint))
+        c_nobs1 <- length(which(X$splitvariable < splitpoint))
         
       } else {
         c_status1 <- "leaf"
-        c_nobs1 <- len(which(X$splitvariable < splitpoint))
+        c_nobs1 <- length(which(X$splitvariable < splitpoint))
       }
       
-      if (len(which(X$splitvariable > splitpoint)) > nobs){
-        c_nobs <- len(which(X$splitvariable > splitpoint))
+      if (length(which(X$splitvariable > splitpoint)) > nobs){
+        c_nobs <- length(which(X$splitvariable > splitpoint))
         c_status2 <- "split"
         
       } else {
-        c_nobs2 <- len(which(X$splitvariable > splitpoint))
+        c_nobs2 <- length(which(X$splitvariable > splitpoint))
           c_status2 <- "leaf"
       }
       
