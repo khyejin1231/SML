@@ -1,12 +1,8 @@
 #library
 
 
-X1 <- data.frame(rnorm(1000, 0, 1))
-X1 <- cbind(X1, rgamma(1000, 2, 1))
-X1 <- cbind(X1, runif(1000, 0, 3))
-X<- X1
-y <- data.frame(X + rnorm(1000, 1, 2))
-  
+
+
 #split function
 split <- function(X, y){
   
@@ -34,82 +30,94 @@ split <- function(X, y){
 #while loop
 
 
-while (k <= maxdepth) {
+tree <- function (X , y){
   
-  k <- 1
+  tree_info <- data.frame(node = 1, nobs = nrow(data), status = "split", level = 1,  
+                          splitpoint = 1, splitvariable = "Variable")
   
-  for (i in length(which(tree_info$level == k))) {
-    #selecting the node
-    branch <- tree_info[which(tree_info$level == k),][i,]
+  k <- 0
+  
+  while (k <= maxdepth) {
     
-    if (branch$nobs > minobs & branch$status == "split"){
-      temp_result <- split(X, y)
+    k <- k + 1
+    
+    for (i in length(which(tree_info$level == k))) {
+      #selecting the node
+      branch <- tree_info[which(tree_info$level == k),][i,]
       
-      node <- branch$node
-      nobs <- branch$nobs
-      status <- "split"
-      level <- k
-      splitpoint <- temp_result[3] 
-      splitvariable <- temp_result[1]
-      
-      new_branch <- c(node, nobs, status, level, splitpoint, splitvariable)
-      
-      #children branches
-      if (length(which(X$splitvariable < splitpoint)) > nobs){
-        c_status1 <- "split"
-        c_nobs1 <- length(which(X$splitvariable < splitpoint))
+      if (branch$nobs > minobs & branch$status == "split"){
+        temp_result <- split(X, y)
         
-      } else {
-        c_status1 <- "leaf"
-        c_nobs1 <- length(which(X$splitvariable < splitpoint))
+        node <- branch$node
+        nobs <- branch$nobs
+        status <- "split"
+        level <- k
+        splitpoint <- temp_result[3] 
+        splitvariable <- temp_result[1]
+        
+        new_branch <- c(node, nobs, status, level, splitpoint, splitvariable)
+        
+        #children branches
+        if (length(which(X$splitvariable < splitpoint)) > nobs){
+          c_status1 <- "split"
+          c_nobs1 <- length(which(X$splitvariable < splitpoint))
+          
+        } else {
+          c_status1 <- "leaf"
+          c_nobs1 <- length(which(X$splitvariable < splitpoint))
+        }
+        
+        if (length(which(X$splitvariable > splitpoint)) > nobs){
+          c_nobs <- length(which(X$splitvariable > splitpoint))
+          c_status2 <- "split"
+          
+        } else {
+          c_nobs2 <- length(which(X$splitvariable > splitpoint))
+          c_status2 <- "leaf"
+        }
+        
+        children <- data.frame(node = c(2 * node, 2 * node + 1),
+                               nobs = c(c_nobs1,c_nobs2), status = c(c_status1,c_status2),
+                               level = c(k+1, k+1), splitpoint = c(NA, NA), splitvariable = c("NA","NA")
+        )
+        
+        #overwrite state of current node
+        tree_info[node, ] <- new_branch
+        
+        #bind everything
+        tree_info <- rbind(tree_info, children)
+        
+        
+      }else{
+        node <- branch$node
+        nobs <- branch$nobs
+        status <- "leaf"
+        level <- k
+        splitpoint <- temp_result[3] 
+        splitvariable <- temp_result[1]
+        
+        new_branch <- c(node, nobs, status, level, splitpoint, splitvariable)
+        
+        tree_info[node, ] <- new_branch
       }
       
-      if (length(which(X$splitvariable > splitpoint)) > nobs){
-        c_nobs <- length(which(X$splitvariable > splitpoint))
-        c_status2 <- "split"
-        
-      } else {
-        c_nobs2 <- length(which(X$splitvariable > splitpoint))
-        c_status2 <- "leaf"
-      }
-      
-      children <- data.frame(c_node = c(2 * node, 2 * node + 1),
-                             c_nobs = c(c_nobs1,c_nobs2), status = c(c_status1,c_status2),
-                             level = c(k+1, k+1), splitpoint = c(NA, NA), splitvariable = c("NA","NA")
-      )
-      
-      #overwrite state of current node
-      tree_info[node, ] <- new_branch
-      
-      #bind everything
-      tree_info <- rbind(tree_info, children)
-      
-      
-    }else{
-      node <- branch$node
-      nobs <- branch$nobs
-      status <- "leaf"
-      level <- k
-      splitpoint <- temp_result[3] 
-      splitvariable <- temp_result[1]
-      
-      new_branch <- c(node, nobs, status, level, splitpoint, splitvariable)
-      
-      tree_info[node, ] <- new_branch
     }
     
   }
   
 }
 
-
 #MAIN#
 #initialization
-k <- 1
 maxdepth <- 3
 minobs <- 50
 
-tree_info <- data.frame(node = 1, nobs = nrow(data), status = "split", level = 1,  
-                        splitpoint = 1, splitvariable = "Variable")
+X1 <- data.frame(rnorm(1000, 0, 1))
+X1 <- cbind(X1, rgamma(1000, 2, 1))
+X1 <- cbind(X1, runif(1000, 0, 3))
+X<- X1
+y <- data.frame(X + rnorm(1000, 1, 2))
+
+tree(X,y)
 
 
